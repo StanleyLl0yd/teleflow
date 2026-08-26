@@ -40,6 +40,8 @@ endif()
 # to reduce conflicts when syncing future Telegram Desktop revisions.
 target_sources(Telegram PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/../SourceFiles/teleflow/flow/flow_context_menu.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../SourceFiles/teleflow/flow/flow_section.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../SourceFiles/teleflow/flow/flow_section.h
     ${CMAKE_CURRENT_LIST_DIR}/../SourceFiles/teleflow/flow/flow_store.cpp
     ${CMAKE_CURRENT_LIST_DIR}/../SourceFiles/teleflow/flow/flow_store.h
 )
