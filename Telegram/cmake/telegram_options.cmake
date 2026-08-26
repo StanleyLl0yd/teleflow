@@ -36,6 +36,28 @@ if (TDESKTOP_API_ID STREQUAL "0" OR TDESKTOP_API_HASH STREQUAL "")
     " ")
 endif()
 
+# TeleFlow additions intentionally live outside the large upstream source list
+# to reduce conflicts when syncing future Telegram Desktop revisions.
+target_sources(Telegram PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/../SourceFiles/teleflow/flow/flow_context_menu.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../SourceFiles/teleflow/flow/flow_store.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/../SourceFiles/teleflow/flow/flow_store.h
+)
+
+# Keep the upstream context-menu implementation untouched. Only the history
+# list translation unit is compiled with its FillContextMenu call redirected
+# to TeleFlowFillContextMenu(), which wraps the original implementation.
+set_source_files_properties(
+    "${src_loc}/history/view/history_view_list_widget.cpp"
+    PROPERTIES COMPILE_DEFINITIONS "FillContextMenu=TeleFlowFillContextMenu"
+)
+
+if (WIN32)
+    # Telegram/CMakeLists.txt assigns OUTPUT_NAME again after this file is
+    # included. Defer our override until the directory has been fully parsed.
+    cmake_language(DEFER CALL set_target_properties Telegram PROPERTIES OUTPUT_NAME "TeleFlow")
+endif()
+
 if (DESKTOP_APP_DISABLE_AUTOUPDATE)
     target_compile_definitions(Telegram PRIVATE TDESKTOP_DISABLE_AUTOUPDATE)
 endif()
