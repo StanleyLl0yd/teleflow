@@ -1,0 +1,45 @@
+name: TeleFlow Adjust Windows CI
+
+on:
+  push:
+    branches:
+      - teleflow/foundation-0.1.0
+    paths:
+      - .github/workflows/teleflow-adjust-win-ci.yml
+
+permissions:
+  contents: write
+
+jobs:
+  adjust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: teleflow/foundation-0.1.0
+      - name: Adjust upstream Windows artifact naming
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('.github/workflows/win.yml')
+          s = p.read_text()
+          old1 = 'ARTIFACT_NAME="Telegram"'
+          old2 = 'move %OUT%\\Telegram.exe artifact/'
+          assert s.count(old1) == 1, s.count(old1)
+          assert s.count(old2) == 1, s.count(old2)
+          s = s.replace(old1, 'ARTIFACT_NAME="TeleFlow"')
+          s = s.replace(old2, 'move %OUT%\\TeleFlow.exe artifact/')
+          p.write_text(s)
+          PY
+          git diff --check
+          grep -q 'ARTIFACT_NAME="TeleFlow"' .github/workflows/win.yml
+          grep -q 'move %OUT%\\TeleFlow.exe artifact/' .github/workflows/win.yml
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/win.yml
+          git commit -m "ci: package TeleFlow executable on Windows"
+          git push origin HEAD:teleflow/foundation-0.1.0
