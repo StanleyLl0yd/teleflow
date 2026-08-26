@@ -35,30 +35,48 @@ base::unique_qptr<Ui::PopupMenu> TeleFlowFillContextMenu(
 	}
 
 	const auto navigation = request.navigation;
-	const auto addTask = [navigation, itemId] {
-		const auto added = TeleFlow::AddItem(
-			navigation->session(),
-			itemId,
-			TeleFlow::FlowType::Task);
-		switch (added) {
-		case TeleFlow::AddResult::Added:
-			navigation->showToast(u"Added to Flow as Task"_q);
-			break;
-		case TeleFlow::AddResult::AlreadyExists:
-			navigation->showToast(
-				u"This message is already an active Flow task"_q);
-			break;
-		case TeleFlow::AddResult::InvalidMessage:
-			navigation->showToast(u"This message can't be added to Flow"_q);
-			break;
-		case TeleFlow::AddResult::StorageLimitReached:
-			navigation->showToast(u"Flow storage limit reached"_q);
-			break;
-		}
+	const auto addFlow = [navigation, itemId](
+			TeleFlow::FlowType type,
+			QString label) {
+		return [navigation, itemId, type, label = std::move(label)] {
+			const auto added = TeleFlow::AddItem(
+				navigation->session(),
+				itemId,
+				type);
+			switch (added) {
+			case TeleFlow::AddResult::Added:
+				navigation->showToast(
+					u"Added to Flow as %1"_q.arg(label));
+				break;
+			case TeleFlow::AddResult::AlreadyExists:
+				navigation->showToast(
+					u"This message is already active in Flow as %1"_q.arg(label));
+				break;
+			case TeleFlow::AddResult::InvalidMessage:
+				navigation->showToast(u"This message can't be added to Flow"_q);
+				break;
+			case TeleFlow::AddResult::StorageLimitReached:
+				navigation->showToast(u"Flow storage limit reached"_q);
+				break;
+			}
+		};
 	};
 
 	auto flowMenu = std::make_unique<Ui::PopupMenu>(result.get(), result->st());
-	flowMenu->addAction(u"Task"_q, addTask);
+	flowMenu->addAction(
+		u"Reply later"_q,
+		addFlow(TeleFlow::FlowType::ReplyLater, u"Reply later"_q));
+	flowMenu->addAction(
+		u"Task"_q,
+		addFlow(TeleFlow::FlowType::Task, u"Task"_q));
+	if (item->out()) {
+		flowMenu->addAction(
+			u"Waiting"_q,
+			addFlow(TeleFlow::FlowType::Waiting, u"Waiting"_q));
+	}
+	flowMenu->addAction(
+		u"Later"_q,
+		addFlow(TeleFlow::FlowType::Later, u"Later"_q));
 	flowMenu->addSeparator();
 	flowMenu->addAction(u"Open Flow"_q, [navigation] {
 		navigation->showSection(TeleFlow::MakeFlowSection());
