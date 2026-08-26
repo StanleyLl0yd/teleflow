@@ -49,6 +49,13 @@ enum class AddResult : uchar {
 	StorageLimitReached,
 };
 
+enum class StateChangeResult : uchar {
+	Changed,
+	NotFound,
+	InvalidMessage,
+	InvalidState,
+};
+
 // Flow data is stored per Telegram account in the existing local account
 // preferences. No Telegram server state is changed by these operations.
 [[nodiscard]] std::vector<FlowItem> ReadItems(Main::Session &session);
@@ -57,5 +64,10 @@ enum class AddResult : uchar {
 	FullMsgId messageId,
 	FlowType type,
 	qint64 dueAt = 0);
+[[nodiscard]] StateChangeResult ChangeActiveItemState(
+	Main::Session &session,
+	FullMsgId messageId,
+	FlowType type,
+	FlowState state);
 
 } // namespace TeleFlow

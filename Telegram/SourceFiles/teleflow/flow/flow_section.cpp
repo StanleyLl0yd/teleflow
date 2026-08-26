@@ -16,16 +16,19 @@ For license and copyright information see LEGAL and LICENSE.
 #include "history/history_item.h"
 #include "main/main_session.h"
 #include "ui/painter.h"
+#include "ui/widgets/popup_menu.h"
 #include "ui/widgets/scroll_area.h"
 #include "window/section_memento.h"
 #include "window/section_widget.h"
 #include "window/window_session_controller.h"
 #include "styles/style_window.h"
 
+#include <QtGui/QCursor>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QPaintEvent>
 
 #include <algorithm>
+#include <functional>
 #include <utility>
 #include <vector>
 
@@ -94,14 +97,14 @@ class FlowListWidget final : public Ui::RpWidget {
 public:
 	FlowListWidget(
 		QWidget *parent,
-		not_null<Window::SessionController*> controller)
+		not_null<Window::SessionController*> controller,
+		std::function<void(int)> activeCountChanged)
 	: RpWidget(parent)
 	, _controller(controller)
+	, _activeCountChanged(std::move(activeCountChanged))
 	, _rows(BuildRows(controller->session())) {
 		setAttribute(Qt::WA_OpaquePaintEvent);
-		if (!_rows.empty()) {
-			setCursor(Qt::PointingHandCursor);
-		}
+		updateCursor();
 	}
 
 	[[nodiscard]] int contentHeight() const {
@@ -171,23 +174,82 @@ protected:
 	}
 
 	void mouseReleaseEvent(QMouseEvent *e) override {
-		if (e->button() != Qt::LeftButton || _rows.empty()) {
+		if (_rows.empty()) {
 			return;
 		}
 		const auto index = e->pos().y() / kRowHeight;
 		if (index < 0 || index >= int(_rows.size())) {
 			return;
 		}
-		const auto id = _rows[index].item.messageId;
+		const auto item = _rows[index].item;
+		if (e->button() == Qt::LeftButton) {
+			openMessage(item.messageId);
+		} else if (e->button() == Qt::RightButton) {
+			showContextMenu(item);
+		}
+	}
+
+private:
+	void openMessage(FullMsgId id) {
 		_controller->showPeerHistory(
 			id.peer,
 			Window::SectionShow(Window::SectionShow::Way::Forward),
 			id.msg);
 	}
 
-private:
+	void showContextMenu(FlowItem item) {
+		_contextMenu = base::make_unique_q<Ui::PopupMenu>(this);
+		_contextMenu->addAction(u"Open message"_q, [=] {
+			openMessage(item.messageId);
+		});
+		_contextMenu->addAction(u"Mark as done"_q, [=] {
+			const auto changed = ChangeActiveItemState(
+				_controller->session(),
+				item.messageId,
+				item.type,
+				FlowState::Done);
+			switch (changed) {
+			case StateChangeResult::Changed:
+				_controller->showToast(u"Flow item completed"_q);
+				reloadRows();
+				break;
+			case StateChangeResult::NotFound:
+				_controller->showToast(u"Flow item is no longer active"_q);
+				reloadRows();
+				break;
+			case StateChangeResult::InvalidMessage:
+				_controller->showToast(u"Flow item has an invalid message"_q);
+				break;
+			case StateChangeResult::InvalidState:
+				_controller->showToast(u"Flow item state can't be changed"_q);
+				break;
+			}
+		});
+		_contextMenu->popup(QCursor::pos());
+	}
+
+	void reloadRows() {
+		_rows = BuildRows(_controller->session());
+		resize(width(), contentHeight());
+		updateCursor();
+		if (_activeCountChanged) {
+			_activeCountChanged(activeCount());
+		}
+		update();
+	}
+
+	void updateCursor() {
+		if (_rows.empty()) {
+			unsetCursor();
+		} else {
+			setCursor(Qt::PointingHandCursor);
+		}
+	}
+
 	const not_null<Window::SessionController*> _controller;
-	const std::vector<FlowRow> _rows;
+	const std::function<void(int)> _activeCountChanged;
+	std::vector<FlowRow> _rows;
+	base::unique_qptr<Ui::PopupMenu> _contextMenu;
 };
 
 class FlowWidget;
@@ -209,7 +271,13 @@ public:
 	: SectionWidget(parent, controller)
 	, _scroll(this, st::defaultSolidScroll) {
 		setAttribute(Qt::WA_OpaquePaintEvent);
-		auto inner = object_ptr<FlowListWidget>(_scroll.data(), controller);
+		auto inner = object_ptr<FlowListWidget>(
+			_scroll.data(),
+			controller,
+			[this](int count) {
+				_activeCount = count;
+				update(QRect(0, 0, width(), kHeaderHeight));
+			});
 		_inner = inner.data();
 		_activeCount = _inner->activeCount();
 		_scroll->setOwnedWidget(std::move(inner));

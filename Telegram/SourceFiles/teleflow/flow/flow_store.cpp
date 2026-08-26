@@ -139,4 +139,28 @@ AddResult AddItem(
 	return AddResult::Added;
 }
 
+StateChangeResult ChangeActiveItemState(
+		Main::Session &session,
+		FullMsgId messageId,
+		FlowType type,
+		FlowState state) {
+	if (!messageId.peer || !IsServerMsgId(messageId.msg)) {
+		return StateChangeResult::InvalidMessage;
+	} else if (state == FlowState::Active) {
+		return StateChangeResult::InvalidState;
+	}
+
+	auto items = ReadItems(session);
+	for (auto &item : items) {
+		if (item.messageId == messageId
+			&& item.type == type
+			&& item.state == FlowState::Active) {
+			item.state = state;
+			session.local().writePref<QByteArray>(kPrefKey, Serialize(items));
+			return StateChangeResult::Changed;
+		}
+	}
+	return StateChangeResult::NotFound;
+}
+
 } // namespace TeleFlow
