@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/view/history_view_context_menu.h"
 
+#include "teleflow/flow/flow_store.h"
+
 #include "api/api_attached_stickers.h"
 #include "api/api_editing.h"
 #include "api/api_global_privacy.h"
@@ -1809,6 +1811,34 @@ void FillContextMenuItems(
 		}
 	}
 	AddTodoListAction(result, request, list);
+
+	// TeleFlow 0.2 vertical slice: persist a message as a Flow task.
+	// The item is local metadata only; Telegram read/server state is untouched.
+	if (item && item->isRegular() && request.selectedItems.empty()) {
+		const auto flowItemId = item->fullId();
+		const auto flowSession = &item->history()->session();
+		const auto flowShow = request.navigation->uiShow();
+		result->addAction(u"Add to Flow as Task"_q, [=] {
+			const auto result = TeleFlow::AddItem(
+				*flowSession,
+				flowItemId,
+				TeleFlow::FlowType::Task);
+			switch (result) {
+			case TeleFlow::AddResult::Added:
+				flowShow->showToast(u"Added to Flow as Task"_q);
+				break;
+			case TeleFlow::AddResult::AlreadyExists:
+				flowShow->showToast(u"This message is already an active Flow task"_q);
+				break;
+			case TeleFlow::AddResult::InvalidMessage:
+				flowShow->showToast(u"This message can't be added to Flow"_q);
+				break;
+			case TeleFlow::AddResult::StorageLimitReached:
+				flowShow->showToast(u"Flow storage limit reached"_q);
+				break;
+			}
+		});
+	}
 
 	if (request.overSelection
 		&& !list->hasCopyRestrictionForSelected()
