@@ -50,7 +50,7 @@ rpl::producer<TextWithEntities> Text2() {
 		lt_github_link,
 		rpl::single(tr::link(
 			"GitHub",
-			"https://github.com/telegramdesktop/tdesktop")),
+			"https://github.com/StanleyLl0yd/teleflow")),
 		tr::marked);
 }
 
@@ -64,7 +64,7 @@ rpl::producer<TextWithEntities> Text3() {
 } // namespace
 
 void AboutBox(not_null<Ui::GenericBox*> box) {
-	box->setTitle(u"Telegram Desktop"_q);
+	box->setTitle(u"TeleFlow"_q);
 
 	auto layout = box->verticalLayout();
 
@@ -150,7 +150,9 @@ QString telegramFaqLink() {
 }
 
 QString currentVersionText() {
-	auto result = QString::fromLatin1(AppVersionStr);
+	auto result = u"%1 (Telegram %2)"_q
+		.arg(QString::fromLatin1(TeleFlowVersionStr))
+		.arg(QString::fromLatin1(AppVersionStr));
 	if (cAlphaVersion()) {
 		result += u" alpha %1"_q.arg(cAlphaVersion() % 1000);
 	} else if (AppBetaVersion) {
