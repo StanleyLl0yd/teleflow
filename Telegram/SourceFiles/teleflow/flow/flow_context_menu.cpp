@@ -7,6 +7,7 @@ Copyright (c) 2026 Stanley Lloyd.
 
 For license and copyright information see LEGAL and LICENSE.
 */
+#include "teleflow/flow/flow_section.h"
 #include "teleflow/flow/flow_store.h"
 
 #include "history/history_item.h"
@@ -58,6 +59,10 @@ base::unique_qptr<Ui::PopupMenu> TeleFlowFillContextMenu(
 
 	auto flowMenu = std::make_unique<Ui::PopupMenu>(result.get(), result->st());
 	flowMenu->addAction(u"Task"_q, addTask);
+	flowMenu->addSeparator();
+	flowMenu->addAction(u"Open Flow"_q, [navigation] {
+		navigation->showSection(TeleFlow::MakeFlowSection());
+	});
 
 	if (!result->empty()) {
 		result->addSeparator();
