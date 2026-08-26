@@ -16,6 +16,8 @@ For license and copyright information see LEGAL and LICENSE.
 #include <QtCore/QByteArray>
 #include <QtCore/QDataStream>
 
+#include <cstddef>
+
 namespace TeleFlow {
 namespace {
 
@@ -121,7 +123,7 @@ AddResult AddItem(
 			return AddResult::AlreadyExists;
 		}
 	}
-	if (items.size() >= size_t(kMaxItems)) {
+	if (items.size() >= std::size_t(kMaxItems)) {
 		return AddResult::StorageLimitReached;
 	}
 
