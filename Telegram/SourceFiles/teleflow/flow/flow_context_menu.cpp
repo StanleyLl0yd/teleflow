@@ -33,12 +33,8 @@ base::unique_qptr<Ui::PopupMenu> TeleFlowFillContextMenu(
 		return result;
 	}
 
-	if (!result->empty()) {
-		result->addSeparator();
-	}
-
 	const auto navigation = request.navigation;
-	result->addAction(u"Add to Flow as Task"_q, [navigation, itemId] {
+	const auto addTask = [navigation, itemId] {
 		const auto added = TeleFlow::AddItem(
 			navigation->session(),
 			itemId,
@@ -58,7 +54,15 @@ base::unique_qptr<Ui::PopupMenu> TeleFlowFillContextMenu(
 			navigation->showToast(u"Flow storage limit reached"_q);
 			break;
 		}
-	});
+	};
+
+	auto flowMenu = std::make_unique<Ui::PopupMenu>(result.get(), result->st());
+	flowMenu->addAction(u"Task"_q, addTask);
+
+	if (!result->empty()) {
+		result->addSeparator();
+	}
+	result->addAction(u"Add to Flow"_q, std::move(flowMenu));
 	return result;
 }
 
