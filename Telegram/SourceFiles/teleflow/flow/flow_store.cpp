@@ -79,9 +79,10 @@ constexpr auto kMaxItems = 10000;
 		auto createdAt = qint64();
 		auto dueAt = qint64();
 		stream >> peer >> message >> type >> state >> createdAt >> dueAt;
+		const auto messageId = MsgId(message);
 		if (stream.status() != QDataStream::Ok
 			|| !peer
-			|| !message
+			|| !IsServerMsgId(messageId)
 			|| !ValidType(type)
 			|| !ValidState(state)) {
 			return {};
@@ -89,7 +90,7 @@ constexpr auto kMaxItems = 10000;
 		result.push_back(FlowItem{
 			.messageId = FullMsgId(
 				PeerId(BareId(peer)),
-				MsgId(message)),
+				messageId),
 			.type = FlowType(type),
 			.state = FlowState(state),
 			.createdAt = createdAt,
@@ -111,7 +112,7 @@ AddResult AddItem(
 		FullMsgId messageId,
 		FlowType type,
 		qint64 dueAt) {
-	if (!messageId) {
+	if (!messageId.peer || !IsServerMsgId(messageId.msg)) {
 		return AddResult::InvalidMessage;
 	}
 
