@@ -7,6 +7,12 @@
 add_executable(Telegram WIN32 MACOSX_BUNDLE)
 init_non_host_target(Telegram)
 
+if (WIN32)
+    # Keep the upstream CMake target name to minimize merge conflicts, but
+    # ship an independent Windows executable.
+    set_target_properties(Telegram PROPERTIES OUTPUT_NAME "TeleFlow")
+endif()
+
 add_subdirectory(lib_rpl)
 add_subdirectory(lib_crl)
 add_subdirectory(lib_base)
@@ -25,6 +31,16 @@ get_filename_component(src_loc SourceFiles REALPATH)
 get_filename_component(res_loc Resources REALPATH)
 
 include(cmake/telegram_options.cmake)
+
+if (WIN32)
+    # Never let an upstream Telegram Desktop update replace TeleFlow.
+    # Crash reporting is also disabled until TeleFlow has its own endpoint.
+    target_compile_definitions(Telegram PRIVATE
+        TDESKTOP_DISABLE_AUTOUPDATE
+        TDESKTOP_DISABLE_CRASH_REPORTS
+    )
+endif()
+
 include(cmake/lib_ffmpeg.cmake)
 include(cmake/lib_stripe.cmake)
 include(cmake/lib_tgcalls.cmake)

@@ -1,99 +1,81 @@
-# [Telegram Desktop][telegram_desktop] – Official Messenger
+# TeleFlow
 
-This is the complete source code and the build instructions for the official [Telegram][telegram] messenger desktop client, based on the [Telegram API][telegram_api] and the [MTProto][telegram_proto] secure protocol.
+**TeleFlow** is an unofficial Telegram desktop client for Windows built around a smart inbox.
 
-[![Version](https://badge.fury.io/gh/telegramdesktop%2Ftdesktop.svg)](https://github.com/telegramdesktop/tdesktop/releases)
-[![Build Status](https://github.com/telegramdesktop/tdesktop/workflows/Windows./badge.svg)](https://github.com/telegramdesktop/tdesktop/actions)
-[![Build Status](https://github.com/telegramdesktop/tdesktop/workflows/MacOS./badge.svg)](https://github.com/telegramdesktop/tdesktop/actions)
-[![Build Status](https://github.com/telegramdesktop/tdesktop/workflows/Linux./badge.svg)](https://github.com/telegramdesktop/tdesktop/actions)
-[![Built with Depot](https://img.shields.io/badge/Built%20with-Depot.dev-46A75A)](https://depot.dev)
+> **Message → Action → Done.**
 
-[![Preview of Telegram Desktop][preview_image]][preview_image_url]
+TeleFlow is based on the official [Telegram Desktop](https://github.com/telegramdesktop/tdesktop) source code and keeps normal Telegram messaging behavior while adding a local productivity layer for messages that require attention.
 
-The source code is published under GPLv3 with OpenSSL exception, the license is available [here][license].
+## Status
 
-## Supported systems
+TeleFlow is currently in early development. Version **0.1.0 Foundation** establishes an independent Windows application identity and prepares the codebase for the Flow feature set.
 
-The latest version is available for
+## Planned core features
 
-* [Windows 7 and above (64 bit)](https://telegram.org/dl/desktop/win64) ([portable](https://telegram.org/dl/desktop/win64_portable))
-* [Windows 7 and above (32 bit)](https://telegram.org/dl/desktop/win) ([portable](https://telegram.org/dl/desktop/win_portable))
-* [macOS 10.13 and above](https://telegram.org/dl/desktop/mac)
-* [Linux static build for 64 bit](https://telegram.org/dl/desktop/linux)
-* [Snap](https://snapcraft.io/telegram-desktop)
-* [Flatpak](https://flathub.org/apps/details/org.telegram.desktop)
+- **Flow Inbox** — one place for messages that require action.
+- **Reply Later** — defer a reply without losing the original context.
+- **Tasks** — turn a Telegram message into a lightweight local task.
+- **Waiting for Reply** — track outgoing messages that still need a response.
+- **Reminders** — return to a specific message at a chosen time.
+- **Done** — close the loop without altering Telegram read state.
+- **Snooze** — temporarily hide a conversation from the TeleFlow view.
+- **Unified Flow** — one action inbox across multiple Telegram accounts.
 
-## Old system versions
+All Flow metadata is intended to stay local to the TeleFlow client unless a future optional synchronization mechanism is explicitly introduced.
 
-Version **4.9.9** was the last that supports older systems
+## Version 0.1.0 — Foundation
 
-* [macOS 10.12](https://updates.tdesktop.com/tmac/tsetup.4.9.9.dmg)
-* [Linux with glibc < 2.28 static build](https://updates.tdesktop.com/tlinux/tsetup.4.9.9.tar.xz)
+The Foundation milestone separates TeleFlow from Telegram Desktop on Windows:
 
-Version **2.4.4** was the last that supports older systems
+- application name: `TeleFlow`;
+- executable: `TeleFlow.exe`;
+- application data: `%APPDATA%\\TeleFlow`;
+- independent installer AppId;
+- independent Windows AppUserModelID;
+- independent notification COM activator CLSID;
+- independent shortcuts and autostart target;
+- upstream auto-update disabled until TeleFlow has its own release channel;
+- upstream crash reporting disabled until TeleFlow has its own crash-reporting endpoint;
+- TeleFlow version separated from the underlying Telegram Desktop version.
 
-* [OS X 10.10 and 10.11](https://updates.tdesktop.com/tosx/tsetup-osx.2.4.4.dmg)
-* [Linux static build for 32 bit](https://updates.tdesktop.com/tlinux32/tsetup32.2.4.4.tar.xz)
+The initial Foundation work is pinned to Telegram Desktop upstream commit:
 
-Version **1.8.15** was the last that supports older systems
+`8dc0f52ee5cb17c68ee7b3762edce9a36fcf9955`
 
-* [Windows XP and Vista](https://updates.tdesktop.com/tsetup/tsetup.1.8.15.exe) ([portable](https://updates.tdesktop.com/tsetup/tportable.1.8.15.zip))
-* [OS X 10.8 and 10.9](https://updates.tdesktop.com/tmac/tsetup.1.8.15.dmg)
-* [OS X 10.6 and 10.7](https://updates.tdesktop.com/tmac32/tsetup32.1.8.15.dmg)
+Telegram Desktop upstream version at that commit: **7.1.2**.
 
-## Third-party
+## Build target
 
-* Qt 6 ([LGPL](http://doc.qt.io/qt-6/lgpl.html)) and Qt 5.15 ([LGPL](http://doc.qt.io/qt-5/lgpl.html)) slightly patched
-* OpenSSL 3.2.1 ([Apache License 2.0](https://openssl-library.org/source/license/apache-license-2.0.txt))
-* WebRTC ([New BSD License](https://github.com/desktop-app/tg_owt/blob/master/LICENSE))
-* zlib ([zlib License](http://www.zlib.net/zlib_license.html))
-* LZMA SDK 9.20 ([public domain](http://www.7-zip.org/sdk.html))
-* liblzma ([public domain](http://tukaani.org/xz/))
-* Google Breakpad ([License](https://chromium.googlesource.com/breakpad/breakpad/+/master/LICENSE))
-* Google Crashpad ([Apache License 2.0](https://chromium.googlesource.com/crashpad/crashpad/+/master/LICENSE))
-* GYP ([BSD License](https://github.com/bnoordhuis/gyp/blob/master/LICENSE))
-* Ninja ([Apache License 2.0](https://github.com/ninja-build/ninja/blob/master/COPYING))
-* OpenAL Soft ([LGPL](https://github.com/kcat/openal-soft/blob/master/COPYING))
-* Opus codec ([BSD License](http://www.opus-codec.org/license/))
-* FFmpeg ([LGPL](https://www.ffmpeg.org/legal.html))
-* Guideline Support Library ([MIT License](https://github.com/Microsoft/GSL/blob/master/LICENSE))
-* Range-v3 ([Boost License](https://github.com/ericniebler/range-v3/blob/master/LICENSE.txt))
-* Open Sans font ([Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html))
-* Vazirmatn font ([SIL Open Font License 1.1](https://github.com/rastikerdar/vazirmatn/blob/master/OFL.txt))
-* Emoji alpha codes ([MIT License](https://github.com/emojione/emojione/blob/master/extras/alpha-codes/LICENSE.md))
-* xxHash ([BSD License](https://github.com/Cyan4973/xxHash/blob/dev/LICENSE))
-* QR Code generator ([MIT License](https://github.com/nayuki/QR-Code-generator#license))
-* CMake ([New BSD License](https://github.com/Kitware/CMake/blob/master/Copyright.txt))
-* Hunspell ([LGPL](https://github.com/hunspell/hunspell/blob/master/COPYING.LESSER))
-* Ada ([Apache License 2.0](https://github.com/ada-url/ada/blob/main/LICENSE-APACHE))
+Initial supported target:
 
-## Build instructions
+- Windows 10 22H2 or newer;
+- Windows 11;
+- x64.
 
-* [Windows (32-bit and 64-bit)][win]
-* [macOS][mac]
-* [GNU/Linux using Docker][linux]
+Other platforms are not a goal of the first TeleFlow release.
 
-[//]: # (LINKS)
-[telegram]: https://telegram.org
-[telegram_desktop]: https://desktop.telegram.org
-[telegram_api]: https://core.telegram.org
-[telegram_proto]: https://core.telegram.org/mtproto
-[license]: LICENSE
-[win]: docs/building-win.md
-[mac]: docs/building-mac.md
-[linux]: docs/building-linux.md
-[preview_image]: https://github.com/telegramdesktop/tdesktop/blob/dev/docs/assets/preview.png "Preview of Telegram Desktop"
-[preview_image_url]: https://raw.githubusercontent.com/telegramdesktop/tdesktop/dev/docs/assets/preview.png
+## Telegram API credentials
 
-## Thanks to
+A distributable third-party Telegram client must use its own Telegram API credentials. Do **not** ship Telegram Desktop test credentials.
 
-<a href="https://depot.dev">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://depot.dev/assets/brand/1693758816/depot-logo-horizontal-on-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://depot.dev/assets/brand/1693758816/depot-logo-horizontal-on-light.svg">
-    <img alt="Depot" src="https://depot.dev/assets/brand/1693758816/depot-logo-horizontal-on-light.svg" width="150">
-  </picture>
-</a>
+Obtain `api_id` and `api_hash` from Telegram and provide them at configure time. Never commit private credentials to this repository.
 
-CI infrastructure sponsored by [Depot](https://depot.dev) — fast GitHub Actions runners.
+See `docs/TELEFLOW_BUILDING_WIN.md`.
 
+## Relationship to Telegram
+
+TeleFlow is an **unofficial** Telegram client. It is not affiliated with, endorsed by, or published by Telegram FZ-LLC.
+
+Telegram and Telegram Desktop are trademarks/products of their respective owners.
+
+## License
+
+Telegram Desktop is licensed under the **GNU General Public License v3 or later with the OpenSSL linking exception**. TeleFlow is a derivative work and is distributed under the same applicable terms.
+
+See `LICENSE` and `LEGAL`.
+
+## Author
+
+**Stanley Lloyd**
+
+GitHub: https://github.com/StanleyLl0yd/teleflow

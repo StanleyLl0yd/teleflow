@@ -18,11 +18,16 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #endif // TDESKTOP_ALLOW_CLOSED_ALPHA
 
 // used in Updater.cpp and Setup.iss for Windows
-constexpr auto AppId = "{53F49750-6209-4FBF-9CA8-7A333C87D1ED}"_cs;
-constexpr auto AppNameOld = "Telegram Win (Unofficial)"_cs;
-constexpr auto AppName = "Telegram Desktop"_cs;
-constexpr auto AppFile = "Telegram"_cs;
+constexpr auto AppId = "{1934CBAF-F72A-43EC-B0CD-94ECEED6FA86}"_cs;
+constexpr auto AppNameOld = "TeleFlow"_cs;
+constexpr auto AppName = "TeleFlow"_cs;
+constexpr auto AppFile = "TeleFlow"_cs;
 constexpr auto AppVersion = 7001002;
 constexpr auto AppVersionStr = "7.1.2";
 constexpr auto AppBetaVersion = false;
 constexpr auto AppAlphaVersion = TDESKTOP_ALPHA_VERSION;
+
+// TeleFlow has its own product version while retaining the upstream
+// Telegram Desktop version for protocol/build compatibility.
+constexpr auto TeleFlowVersion = 100;
+constexpr auto TeleFlowVersionStr = "0.1.0";
