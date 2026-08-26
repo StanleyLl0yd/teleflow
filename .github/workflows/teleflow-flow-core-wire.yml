@@ -1,0 +1,69 @@
+name: TeleFlow Flow Core Wire
+
+on:
+  push:
+    branches:
+      - teleflow/flow-core-0.2.0
+    paths:
+      - .github/workflows/teleflow-flow-core-wire.yml
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: teleflow/flow-core-0.2.0
+
+      - name: Wire Flow sources and first context action
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          cmake = Path('Telegram/CMakeLists.txt')
+          s = cmake.read_text()
+          anchor = '    core/version.h\n'
+          insertion = (
+              '    core/version.h\n'
+              '    teleflow/flow/flow_store.cpp\n'
+              '    teleflow/flow/flow_store.h\n'
+          )
+          assert s.count(anchor) == 1, f'CMake anchor count: {s.count(anchor)}'
+          assert 'teleflow/flow/flow_store.cpp' not in s
+          cmake.write_text(s.replace(anchor, insertion, 1))
+
+          context = Path('Telegram/SourceFiles/history/view/history_view_context_menu.cpp')
+          s = context.read_text()
+          include_anchor = '#include "history/view/history_view_context_menu.h"\n'
+          include_insert = (
+              '#include "history/view/history_view_context_menu.h"\n\n'
+              '#include "teleflow/flow/flow_store.h"\n'
+          )
+          assert s.count(include_anchor) == 1, f'include anchor count: {s.count(include_anchor)}'
+          assert '#include "teleflow/flow/flow_store.h"' not in s
+          s = s.replace(include_anchor, include_insert, 1)
+
+          action_anchor = '\tAddTodoListAction(result, request, list);\n'
+          action_insert = '''\tAddTodoListAction(result, request, list);\n\n\t// TeleFlow 0.2 vertical slice: persist a message as a Flow task.\n\t// The item is local metadata only; Telegram read/server state is untouched.\n\tif (item && item->isRegular() && request.selectedItems.empty()) {\n\t\tconst auto flowItemId = item->fullId();\n\t\tconst auto flowSession = &item->history()->session();\n\t\tconst auto flowShow = request.navigation->uiShow();\n\t\tresult->addAction(u"Add to Flow as Task"_q, [=] {\n\t\t\tconst auto result = TeleFlow::AddItem(\n\t\t\t\t*flowSession,\n\t\t\t\tflowItemId,\n\t\t\t\tTeleFlow::FlowType::Task);\n\t\t\tswitch (result) {\n\t\t\tcase TeleFlow::AddResult::Added:\n\t\t\t\tflowShow->showToast(u"Added to Flow as Task"_q);\n\t\t\t\tbreak;\n\t\t\tcase TeleFlow::AddResult::AlreadyExists:\n\t\t\t\tflowShow->showToast(u"This message is already an active Flow task"_q);\n\t\t\t\tbreak;\n\t\t\tcase TeleFlow::AddResult::InvalidMessage:\n\t\t\t\tflowShow->showToast(u"This message can't be added to Flow"_q);\n\t\t\t\tbreak;\n\t\t\tcase TeleFlow::AddResult::StorageLimitReached:\n\t\t\t\tflowShow->showToast(u"Flow storage limit reached"_q);\n\t\t\t\tbreak;\n\t\t\t}\n\t\t});\n\t}\n'''
+          assert s.count(action_anchor) == 1, f'action anchor count: {s.count(action_anchor)}'
+          assert 'Add to Flow as Task' not in s
+          context.write_text(s.replace(action_anchor, action_insert, 1))
+          PY
+
+          git diff --check
+          grep -q 'teleflow/flow/flow_store.cpp' Telegram/CMakeLists.txt
+          grep -q 'Add to Flow as Task' Telegram/SourceFiles/history/view/history_view_context_menu.cpp
+
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Telegram/CMakeLists.txt Telegram/SourceFiles/history/view/history_view_context_menu.cpp
+          git commit -m "feat(flow): wire message context menu to Flow tasks"
+          git push origin HEAD:teleflow/flow-core-0.2.0
