@@ -121,7 +121,7 @@ AddResult AddItem(
 			return AddResult::AlreadyExists;
 		}
 	}
-	if (items.size() >= kMaxItems) {
+	if (items.size() >= size_t(kMaxItems)) {
 		return AddResult::StorageLimitReached;
 	}
 
